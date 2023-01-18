@@ -13,21 +13,21 @@ export interface RconOptions {
     password: string
     /**
      * Maximum time for a packet to arrive before an error is thrown
-     * @default 60000 ms
+     * @default 2000 ms
      */
     timeout?: number,
     /**
      * Maximum number of parallel requests. Most minecraft servers can
      * only reliably process one packet at a time.
-     * @default 100
+     * @default 1
      */
     maxPending?: number
 }
 
 const defaultOptions = {
     port: 25575,
-    timeout: 60000,
-    maxPending: 100
+    timeout: 2000,
+    maxPending: 1
 }
 
 interface Events {
@@ -86,8 +86,8 @@ export class Rcon {
             })
         } catch (error) {
             this.socket = null
-            return this.emitter.emit(error)
-            
+            this.emitter.emit(error)
+            return this
         }
 
         socket.setNoDelay(true)
@@ -115,7 +115,8 @@ export class Rcon {
             this.sendQueue.pause()
             this.socket.destroy()
             this.socket = null
-            return this.emitter.emit("Authentication failed")
+            this.emitter.emit("Authentication failed")
+            return this
         }
 
         this.authenticated = true
@@ -128,9 +129,13 @@ export class Rcon {
     */
     async end() {
         if (!this.socket || this.socket.connecting) {
-            return this.emitter.emit("Not connected")
+            this.emitter.emit("Not connected")
+            return this
         }
-        if (!this.socket.writable)  return this.emitter.emit("Not connected")
+        if (!this.socket.writable) {
+            this.emitter.emit("End called twice")
+            return this
+        }
         this.sendQueue.pause()
         this.socket.end()
         await new Promise(resolve => this.on("end", resolve))
@@ -148,7 +153,10 @@ export class Rcon {
     }
 
     async sendRaw(buffer: Buffer) {
-        if (!this.authenticated || !this.socket) return this.emitter.emit("Not connected")
+        if (!this.authenticated || !this.socket) {
+            this.emitter.emit("Not connected")
+            return this
+        }
         const packet = await this.sendPacket(PacketType.Command, buffer)
         return packet.payload
     }
