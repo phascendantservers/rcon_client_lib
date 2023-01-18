@@ -67,7 +67,8 @@ export class Rcon {
 
     async connect() {
         if (this.socket) {
-            throw new Error("Already connected or connecting")
+            this.emitter.emit("Already connected or connecting")
+            return this
         }
 
         const socket = this.socket = connect({
@@ -85,7 +86,8 @@ export class Rcon {
             })
         } catch (error) {
             this.socket = null
-            throw error
+            return this.emitter.emit(error)
+            
         }
 
         socket.setNoDelay(true)
@@ -113,7 +115,7 @@ export class Rcon {
             this.sendQueue.pause()
             this.socket.destroy()
             this.socket = null
-            throw new Error("Authentication failed")
+            return this.emitter.emit("Authentication failed")
         }
 
         this.authenticated = true
@@ -126,9 +128,9 @@ export class Rcon {
     */
     async end() {
         if (!this.socket || this.socket.connecting) {
-            throw new Error("Not connected")
+            return this.emitter.emit("Not connected")
         }
-        if (!this.socket.writable) throw new Error("End called twice")
+        if (!this.socket.writable)  return this.emitter.emit("Not connected")
         this.sendQueue.pause()
         this.socket.end()
         await new Promise(resolve => this.on("end", resolve))
@@ -146,7 +148,7 @@ export class Rcon {
     }
 
     async sendRaw(buffer: Buffer) {
-        if (!this.authenticated || !this.socket) throw new Error("Not connected")
+        if (!this.authenticated || !this.socket) return this.emitter.emit("Not connected")
         const packet = await this.sendPacket(PacketType.Command, buffer)
         return packet.payload
     }
