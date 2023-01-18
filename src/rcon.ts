@@ -129,8 +129,8 @@ export class Rcon {
     */
     async end() {
         if (!this.socket || this.socket.connecting) {
-            //throw new Error("Not connected")
-            return "Not connected";
+            //throw new Error("RCON: Not connected")
+            return "RCON: Not connected";
         }
         if (!this.socket.writable)  return "End called twice";//throw new Error("End called twice")
         this.sendQueue.pause()
@@ -150,7 +150,7 @@ export class Rcon {
     }
 
     async sendRaw(buffer: Buffer) {
-        if (!this.authenticated || !this.socket)  return "Not connected"; ///throw new Error("Not connected")
+        if (!this.authenticated || !this.socket)  return "RCON: Not connected"; ///throw new Error("RCON: Not connected")
         const packet = await this.sendPacket(PacketType.Command, buffer)
         return packet.payload
     }
