@@ -67,8 +67,9 @@ export class Rcon {
 
     async connect() {
         if (this.socket) {
-            this.emitter.emit("Already connected or connecting")
-            return this
+            //throw new Error("")
+            return console.log("Already connected or connecting")
+            
         }
 
         const socket = this.socket = connect({
@@ -86,8 +87,8 @@ export class Rcon {
             })
         } catch (error) {
             this.socket = null
-            this.emitter.emit(error)
-            return this
+            //throw 
+            return console.log(error)
         }
 
         socket.setNoDelay(true)
@@ -115,8 +116,8 @@ export class Rcon {
             this.sendQueue.pause()
             this.socket.destroy()
             this.socket = null
-            this.emitter.emit("Authentication failed")
-            return this
+           // throw new Error("")
+            return console.log("Authentication failed")
         }
 
         this.authenticated = true
@@ -129,13 +130,10 @@ export class Rcon {
     */
     async end() {
         if (!this.socket || this.socket.connecting) {
-            this.emitter.emit("Not connected")
-            return this
+            //throw new Error("")
+            return console.log("Not connected")
         }
-        if (!this.socket.writable) {
-            this.emitter.emit("End called twice")
-            return this
-        }
+        if (!this.socket.writable) return console.log("End called twice") //throw new Error("")
         this.sendQueue.pause()
         this.socket.end()
         await new Promise(resolve => this.on("end", resolve))
@@ -153,10 +151,7 @@ export class Rcon {
     }
 
     async sendRaw(buffer: Buffer) {
-        if (!this.authenticated || !this.socket) {
-            this.emitter.emit("Not connected")
-            return this
-        }
+        if (!this.authenticated || !this.socket) return console.log("Not connected") //throw new Error("")
         const packet = await this.sendPacket(PacketType.Command, buffer)
         return packet.payload
     }
