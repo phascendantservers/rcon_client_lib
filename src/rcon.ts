@@ -13,21 +13,21 @@ export interface RconOptions {
     password: string
     /**
      * Maximum time for a packet to arrive before an error is thrown
-     * @default 2000 ms
+     * @default 60000 ms
      */
     timeout?: number,
     /**
      * Maximum number of parallel requests. Most minecraft servers can
      * only reliably process one packet at a time.
-     * @default 1
+     * @default 100
      */
     maxPending?: number
 }
 
 const defaultOptions = {
     port: 25575,
-    timeout: 2000,
-    maxPending: 1
+    timeout: 60000,
+    maxPending: 100
 }
 
 interface Events {
